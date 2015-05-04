@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+# http://cimpress.com/techchallenge/register/?utm_source=site&utm_medium=registration&utm_campaign=techchallenge
 ########################################################################
 # Cimpress Tech Challenge 2: Covering a grid with squares
 # Sample solution by Cimpress (Python).
@@ -88,9 +88,9 @@ print('Generating solution')
 # permutation method, testing
 # -------------------------
 permutationProcessor = PermutationProcessor()
-permutationArray = permutationProcessor.getAllPermutation(puzzle)
-permutationSquareArray = permutationProcessor.tryAllPermutation(puzzle)
-#print(permutationArray)
+
+permutationSquareArray = permutationProcessor.getMinimumSquaresArray(puzzle)
+print(permutationSquareArray)
 
 # jsonResult = s.submitSolution(puzzle['id'], squares)
 

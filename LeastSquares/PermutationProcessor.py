@@ -1,65 +1,74 @@
 from ItemModel import ItemModel
+from Processor import Processor
 
 class PermutationProcessor:
-    markedArray = []
     tempSizeArray = []
+    
+    def getMinimumSquaresArray(self, puzzleModel):
+        # get permutation array
+        permutationArray = self.getAllPermutation(puzzleModel)
+        
+        # get all possible arrays
+        ListOfPossibleSolutions = self.tryAllPermutation(puzzleModel, permutationArray)
+        
+        # pick the smallest array and return
+        minimumSquaresArray = []
+        if len(ListOfPossibleSolutions) > 0:
+            minimumSquaresArray = min(ListOfPossibleSolutions, key=len)
 
+        return minimumSquaresArray
+
+    # returns a array with all items and their possible square size
     def getAllPermutation(self, puzzleModel):
+        processor = Processor()
+
         permutationArray = []
         for row in range(0, puzzleModel.height):
             for col in range(0, puzzleModel.width):
-
                 squareAtPosition = puzzleModel.puzzle[row][col]
                 if squareAtPosition:
                     #resetArray
                     self.tempSizeArray = []
-                    sizeArray = self.getSquareSize(row, col, puzzleModel.puzzle, 1)
+                    sizeArray = self.getPossibleSquareSize(row, col, puzzleModel.puzzle, 1)
 
                     itemToLook = ItemModel(row, col)
                     permutationArray.append({'Item': itemToLook, 'SizeArray': sizeArray})
 
         return permutationArray
 
-    def tryAllPermutation(self, puzzleModel):
-        permutationArray = []
-        for row in range(0, puzzleModel.height):
-            for col in range(0, puzzleModel.width):
+    # returns list of array for all possible combinations 
+    def tryAllPermutation(self, puzzleModel, permutationArray):
 
-                squareAtPosition = puzzleModel.puzzle[row][col]
-                if squareAtPosition:
-                    #resetArray
-                    self.tempSizeArray = []
-                    sizeArray = self.getSquareSize(row, col, puzzleModel.puzzle, 1)
+        ListOfPossibleSolutions = []
+        processor = Processor()
 
-                    itemToLook = ItemModel(row, col)
-                    permutationArray.append({'Item': itemToLook, 'SizeArray': sizeArray})
+        #iterate all possible combinations
+        combinationItem = processor.advancedSolve(puzzleModel)
 
-        return permutationArray
+        listOfCombinations.append(combinationItem)
+        return ListOfPossibleSolutions 
 
-
-    def getSquareSize(self, itemXpos, itemYpos, itemArray, recursionLevel):
+    # Get the possible recursion level, or square side of each item
+    def getPossibleSquareSize(self, itemXpos, itemYpos, itemArray, recursionLevel):
         # add to temp size array
-        self.tempSizeArray.append(recursionLevel**2)
+        # self.tempSizeArray.append(recursionLevel**2)
+        self.tempSizeArray.append(recursionLevel)
         
         # Check if all the neighbours for the recursion level are squares and inside the itemArray
-        neighboursArray = self.getNeighbours(itemXpos, itemYpos, itemArray, recursionLevel)
+        processor = Processor()
+        neighboursArray = processor.getNeighbours(itemXpos, itemYpos, itemArray, recursionLevel)
 
         # If all are inside, add to marked array and try again at a higher recursion level
-        if self.checkNeighbours(neighboursArray, itemArray):
-            # add to marked items array
-            self.markedArray.extend(neighboursArray)
-
-
+        if self.checkPossibleNeighbours(neighboursArray, itemArray):
             # recursion of method
-            return self.getSquareSize(itemXpos, itemYpos, itemArray, recursionLevel + 1)
+            return self.getPossibleSquareSize(itemXpos, itemYpos, itemArray, recursionLevel + 1)
 
-
-        # else, return the square of the last recursion level
+        # else, return the array of possible sizes
         else:
-            return self.tempSizeArray # recursionLevel**2
+            return self.tempSizeArray
     
-        # make an array of the possible items based on recursion level.
-    def getNeighbours(self, itemX, itemY, puzzleArray, recursionLevel):
+     # make an array of the possible items based on recursion level.
+    def getPossibleNeighbours(self, itemX, itemY, puzzleArray, recursionLevel):
         neighboursArray = []
 
         # Find the number of neighbours for the recursion level: recursionLevel*2 - 1
@@ -69,7 +78,6 @@ class PermutationProcessor:
         for i in range(recursionLevel):
             rightItem =  ItemModel(itemX + recursionLevel, itemY + i)
             neighboursArray.append(rightItem)
-
 
         # get bottom neighbour items
         for i in range(recursionLevel):
@@ -84,7 +92,7 @@ class PermutationProcessor:
         return neighboursArray
 
     # Checks the neighbours to see if they are true and inside the array
-    def checkNeighbours(self, neighboursArray, puzzleArray):
+    def checkPossibleNeighbours(self, neighboursArray, puzzleArray):
         # simple check
         if len(neighboursArray) <= 0:
             return False
@@ -97,10 +105,7 @@ class PermutationProcessor:
                 # special method for permutation check
                 if not isSquare:
                     return False
-                #squareIsMarked = any(marked.x == item.x and marked.y == item.y for marked in self.markedArray)
-                #if not isSquare or squareIsMarked:
-                #    return False
-                # return isSquare
+
             except IndexError:
                 # break
                 return False

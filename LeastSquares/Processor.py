@@ -1,9 +1,9 @@
 from ItemModel import ItemModel
 
 class Processor:
-    #i = 3
     markedArray = []
 
+    # default solve, 1x1 only
     def solve(self, puzzleModel):
         solution = []
         for row in range(0, puzzleModel.height):
@@ -12,6 +12,7 @@ class Processor:
                     solution.append({'X': col, 'Y': row, 'Size': 1})
         return solution
 
+    # advanced solve, tries to make a square as big as possible
     def advancedSolve(self, puzzleModel):
         solution = []
         for row in range(0, puzzleModel.height):
@@ -91,4 +92,5 @@ class Processor:
 
         return True
 
-
+    def combinationSolve(self, puzzleModel, combinationArray):
+        return 0

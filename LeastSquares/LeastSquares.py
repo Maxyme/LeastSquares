@@ -91,6 +91,7 @@ permutationProcessor = PermutationProcessor()
 permutationArray = permutationProcessor.getAllPermutation(puzzle)
 permutationSquareArray = permutationProcessor.tryAllPermutation(puzzle)
 print(permutationArray)
+#print(permutationArray)
 
 
 # jsonResult = s.submitSolution(puzzle['id'], squares)

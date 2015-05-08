@@ -62,14 +62,12 @@ print('You retrieved a puzzle with {0} width x {1} height and ID={2}'.format(
     puzzle.id))
 
 print('Generating solution')
-# squares = s.solve(puzzleJson)
 
-# normal method, works ok..
+# normal single permutation method, works ok.. cannot solve 4*4 with missing last square
 # -------------------------
-#p = Processor()
-#squares = p.solve(puzzle)
-
-#squaresAdvanced = p.advancedSolve(puzzle)
+p = Processor()
+squares = p.solve(puzzle)
+squaresAdvanced = p.advancedSolve(puzzle)
 
 #print('Number of squares normal method')
 #print(len(squares))
@@ -85,11 +83,11 @@ print('Generating solution')
 
 #print('Submitting solution')
 
-# permutation method, testing
+# permutation method, get the shortest array of all possible
 # -------------------------
 permutationProcessor = PermutationProcessor()
-
 permutationSquareArray = permutationProcessor.getMinimumSquaresArray(puzzle)
+
 print(permutationSquareArray)
 
 # jsonResult = s.submitSolution(puzzle['id'], squares)

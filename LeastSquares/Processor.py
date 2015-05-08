@@ -14,6 +14,9 @@ class Processor:
 
     # advanced solve, tries to make a square as big as possible
     def advancedSolve(self, puzzleModel):
+        # reset marked array
+        self.markedArray = []
+
         solution = []
         for row in range(0, puzzleModel.height):
             for col in range(0, puzzleModel.width):
@@ -46,7 +49,7 @@ class Processor:
         else:
             return recursionLevel**2
     
-        # make an array of the possible items based on recursion level.
+    # make an array of the possible items based on recursion level.
     def getNeighbours(self, itemX, itemY, puzzleArray, recursionLevel):
         neighboursArray = []
 
@@ -57,7 +60,6 @@ class Processor:
         for i in range(recursionLevel):
             rightItem =  ItemModel(itemX + recursionLevel, itemY + i)
             neighboursArray.append(rightItem)
-
 
         # get bottom neighbour items
         for i in range(recursionLevel):

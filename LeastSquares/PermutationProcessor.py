@@ -117,18 +117,21 @@ class PermutationProcessor:
         # by finding all possible sizes with a recursion lock on an item
 
         for permutationItem in permutationArray:
-            
             # skips items with only 1 size possibility
             if len(permutationItem["SizeArray"]) == 1:
                 continue
+
             array = permutationItem["SizeArray"]
             item = permutationItem["Item"]
             for maxRecursion in array:
-
                 combinationItem = self.recursionLockSolve(puzzleModel, item, maxRecursion)
                 ListOfPossibleSolutions.append(combinationItem)
 
-        return ListOfPossibleSolutions 
+        # Recursive method to try all possibilities until the lockItems array contains all possibilities
+        #if self.lockItemsArray:
+        #    return self.getAllPermutations(puzzleModel, permutationArray)
+        #else:
+        return ListOfPossibleSolutions
 
     
     # advanced solve, tries to make a square as big as possible

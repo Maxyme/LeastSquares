@@ -24,6 +24,7 @@
   <ItemGroup>
     <Compile Include="LeastSquares.py" />
     <Compile Include="PermutationProcessor.py" />
+    <Compile Include="LockItem.py" />
     <Compile Include="PuzzleModel.py" />
     <Compile Include="ItemModel.py">
       <SubType>Code</SubType>

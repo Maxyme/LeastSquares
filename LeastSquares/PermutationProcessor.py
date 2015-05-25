@@ -1,6 +1,7 @@
 from ItemModel import ItemModel
 from LockItem import LockItem
 from Processor import Processor
+import math 
 
 class PermutationProcessor:
     # Temp size array
@@ -14,13 +15,23 @@ class PermutationProcessor:
     # different sizes
     ListOfPossibleSolutions = []
 
+    # The number of squares in the puzzle array
+    numberOfSquaresInPuzzleModel = 0
+
     # Public method - the one that calls all the others
     def getMinimumSquaresArray(self, puzzleModel):
         # Get array of possible sizes at each position
         possiblePermutationsArray = self.getPossibleSizePerSquare(puzzleModel)
         
+        # Get the number of squares in the puzzle
+        numberOfSquaresInPuzzleModel = 0
+        for x in range(0, len(puzzleModel.puzzle)):
+            self.numberOfSquaresInPuzzleModel += sum(item for item in puzzleModel.puzzle[x] if item == True)
+
         # Get all possible arrays using the possible sizes for each square
-        ListOfPossibleSolutions = self.getAllPermutations(puzzleModel, possiblePermutationsArray)
+        lockArray = []
+        combinationItem = []
+        ListOfPossibleSolutions = self.getAllPermutations(puzzleModel, possiblePermutationsArray, lockArray, combinationItem)
         
         # Pick the first smallest array in the list and return
         minimumSquaresArray = []
@@ -42,6 +53,35 @@ class PermutationProcessor:
                     sizeArray = self.getPossibleSquareSize(row, col, puzzleModel.puzzle, 1)
 
                     itemToLook = ItemModel(row, col)
+                    permutationArray.append({'Item': itemToLook, 'SizeArray': sizeArray})
+
+        return permutationArray
+
+    # Returns a array with all items and their possible square size
+    def getPossibleSizePerSquareWithLock(self, puzzleModel, lockArray):
+        permutationArray = []
+        for row in range(0, puzzleModel.height):
+            for col in range(0, puzzleModel.width):
+                itemToLook = ItemModel(row, col)
+
+                lockedSquare = next((lockItem for lockItem in lockArray if lockItem.Item.x == row and lockItem.Item.y == col and lockItem.Used == False), None)
+                if lockedSquare is not None:
+                    # Get the size to mark other squares even if size = lockedSquare.MaxRecursion ** 2
+                    currentRecursionLevel = 0
+                    size = self.getPossibleSquareSizeWithRecursionLock(row, col, puzzleModel.puzzle, currentRecursionLevel, lockedSquare.MaxRecursion)
+                    sizeArray = [size]
+                    #solution.append({'X': col, 'Y': row, 'Size': size})
+                    permutationArray.append({'Item': itemToLook, 'SizeArray': sizeArray})
+                    # Skip to the next item
+                    continue
+
+                squareAtPosition = puzzleModel.puzzle[row][col]
+                if squareAtPosition:
+                    #reset temp array
+                    self.tempSizeArray = []
+                    sizeArray = self.getPossibleSquareSize(row, col, puzzleModel.puzzle, 1)
+
+
                     permutationArray.append({'Item': itemToLook, 'SizeArray': sizeArray})
 
         return permutationArray
@@ -69,34 +109,58 @@ class PermutationProcessor:
     # Returns an array with all possible permutations of the square by
     # Iterating all possible combinations of size for each position and
     # generate an array of object with the positions by finding all possible sizes with a recursion lock on an item
-    def getAllPermutations(self, puzzleModel, permutationArray):
-        lockArray = []
+    def getAllPermutations(self, puzzleModel, permutationArray, lockArray, combinationItem):
+        
+        # return list of possible solution if all items are locked / all items are covered by current solution
+        if len(lockArray) > 0:
+            sumOfCoveredArea = sum(c.MaxRecursion ** 2 for c in lockArray)
+            if self.numberOfSquaresInPuzzleModel == sumOfCoveredArea:
+                return self.ListOfPossibleSolutions 
 
         for permutationItem in permutationArray:
             array = permutationItem["SizeArray"]
             item = permutationItem["Item"]
 
-            # skips items with only 1 size possibility
+            # TODO?
+            # Skips items with only 1 size possibility
             if len(array) == 1:
                 continue
 
-            # loop array from biggest item to smallest
+            # Loop array from biggest item to smallest
             for maxRecursion in reversed(array):
-                # Add to lock array
-                lockItem = LockItem(item, maxRecursion)
+                # Add to lock array and get the possible combination array for the locked item
+                lockItem = LockItem(item, maxRecursion, False)
+                # adjust max recursion based on previous combination item if in combination item
+                if len(combinationItem) > 0:
+                    previousMaxSize = next((c['Size'] for c in combinationItem if lockItem.Item.x == c['X'] and lockItem.Item.y == c['Y']), None)
+                    if previousMaxSize is not None:
+                        lockItem.MaxRecursion = math.sqrt(previousMaxSize)
+                        else # element was marked
+
+
                 lockArray.append(lockItem)
 
                 combinationItem = self.recursionLockSolve(puzzleModel, lockArray)
 
+                # crazy recursion test!!
+                possiblePermutationsArray = self.getPossibleSizePerSquareWithLock(puzzleModel, lockArray)
+
+                # Get all possible arrays using the possible sizes for each square
+                ListOfPossibleSolutions = self.getAllPermutations(puzzleModel, possiblePermutationsArray, lockArray, combinationItem)
+
+                # Mark locked item as used
+                itemIndex = lockArray.index(lockItem)
+                lockArray[itemIndex].Used = True
+
                 # Add combination to list of possibilities
-                ListOfPossibleSolutions.append(combinationItem)
+                self.ListOfPossibleSolutions.append(combinationItem)
 
         # Recursive method to try all possibilities until the lockItems array
         # contains all possibilities
         #if self.lockItemsArray:
         #    return self.getAllPermutations(puzzleModel, permutationArray)
         #else:
-        return ListOfPossibleSolutions
+        return self.ListOfPossibleSolutions
     
     # Advanced solve, tries to make a square as big as possible
     def recursionLockSolve(self, puzzleModel, lockArray):
@@ -108,34 +172,23 @@ class PermutationProcessor:
             for col in range(0, puzzleModel.width):
                 # Check if the square is a locked item and the use the max recursion for that item
 
-                squareIsLocked = any(lockItem.Item.x == row and lockItem.Item.y == col for lockItem in lockArray)
-
-                if (row == itemToLock.x and col == itemToLock.y):
-                    # Get size and mark neighbours using the item max recursion lock
-
-                    # start at recursion level 1 to mark neighbourgh items
-                    currentRecursionLevel = 1
-                    size = self.getPossibleSquareSizeWithRecursionLock(row, col, puzzleModel.puzzle, currentRecursionLevel, itemMaxRecursion)
-                         
-                    size = itemMaxRecursion ** 2
+                lockedSquare = next((lockItem for lockItem in lockArray if lockItem.Item.x == row and lockItem.Item.y == col and lockItem.Used == False), None)
+                if lockedSquare is not None:
+                    # Get the size to mark other squares even if size = lockedSquare.MaxRecursion ** 2
+                    currentRecursionLevel = 0
+                    size = self.getPossibleSquareSizeWithRecursionLock(row, col, puzzleModel.puzzle, currentRecursionLevel, lockedSquare.MaxRecursion)
                     solution.append({'X': col, 'Y': row, 'Size': size})
-                    # Then skip to the next item
+                    # Skip to the next item
                     continue
 
-
-                # check for true, which means it is a square and check for
-                # marking from previous
+                # Check if there is a square at the position and it was not previously marked
                 squareAtPosition = puzzleModel.puzzle[row][col]
-                
-                # check for marked item, which means it is used in a different
-                # square
+                squareIsMarked = any(item.x == row and item.y == col for item in self.markedArray)
 
-                squareIsMarked = any(item.x == row and item.y == col for item in self.markedArray) # itemToLook not in Processor.markedArray
+                # Add square and size to array if not marked 
                 if squareAtPosition and not squareIsMarked:
                     recursionLevel = 1
                     size = self.getSquareSize(row, col, puzzleModel.puzzle, 1)
-                    #size = self.getPossibleSquareSizeWithRecursionLock(row,
-                    #col, puzzleModel.puzzle, recursionLevel)
                     solution.append({'X': col, 'Y': row, 'Size': size})
 
         return solution
